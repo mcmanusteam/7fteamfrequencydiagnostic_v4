@@ -557,6 +557,13 @@ function deleteTeam(key){
 }
 
 document.addEventListener('DOMContentLoaded',render);
+  // Report height to parent for iframe auto-resize
+function reportHeight() {
+  const h = document.getElementById('app').scrollHeight;
+  window.parent.postMessage({ type: 'resize', height: h }, '*');
+}
+const resizeObserver = new ResizeObserver(reportHeight);
+resizeObserver.observe(document.getElementById('app'));
 </script>
 </body>
 </html>
