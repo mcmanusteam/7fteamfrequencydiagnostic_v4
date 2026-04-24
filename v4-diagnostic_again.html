@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Diagnostic V4 — The Seven Frequencies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#08080e;}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{opacity:1;}
+input{outline:none;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const BG="#08080e",PANEL="#0f0f1a",PANEL2="#161625",GOLD="#c9a75c";
+const TEXT="#ede9df",TEXT_DIM="rgba(237,233,223,0.5)",TEXT_DIMMER="rgba(237,233,223,0.3)";
+const BORDER="rgba(237,233,223,0.08)";
+const mono="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.28em;text-transform:uppercase;";
+
+const FREQ=[
+  {id:"mot",name:"Motivator",role:"Energy Catalyst",transmits:"Energy & self-belief",color:"#e8533a"},
+  {id:"hea",name:"Healer",role:"Culture Anchor",transmits:"Acceptance & wholeness",color:"#4db882"},
+  {id:"cha",name:"Challenger",role:"Growth Provocateur",transmits:"Courage & calling",color:"#e8a020"},
+  {id:"com",name:"Commander",role:"Execution Driver",transmits:"Trust & direction",color:"#4a7ee0"},
+  {id:"pro",name:"Professor",role:"Knowledge Architect",transmits:"Knowledge & competency",color:"#9b6ed4"},
+  {id:"see",name:"Seer",role:"Strategic Visionary",transmits:"Vision & innovation",color:"#38b8c0"},
+  {id:"mav",name:"Maven",role:"Paradigm Disruptor",transmits:"New reality & paradigm",color:"#d44e96"},
+];
+const FREQ_BY_ID=Object.fromEntries(FREQ.map(f=>[f.id,f]));
+const T_COLORS={amp:"#e8a020",con:"#4a7ee0",cat:"#d44e96",sta:"#4db882",dis:"#e8533a",mir:"#c9a75c"};
+const T_NAMES={amp:"Amplifying",con:"Contrasting",cat:"Catalytic",sta:"Stabilizing",dis:"Disruptive",mir:"Mirror"};
+const T_ICONS={amp:"⟡",con:"⇌",cat:"◈",sta:"⊕",dis:"⚡",mir:"◉"};
+
+const TENSIONS={
+  "mot-mot":{type:"mir",tdcm:{title:"The Echo Chamber of Belief",subtitle:"When the room runs on pure energy with no ground beneath it",dynamic:"Two Motivators in the same team create an atmosphere unlike anything else in corporate culture. The energy is real, the belief is genuine, and the momentum is extraordinary — until it isn't. Without a frequency that grounds the forward motion in reality, two Motivators will consistently over-promise, under-deliver, and exhaust the people around them without understanding why.",coaching:"Coach both Motivators to build a deliberate practice of grounding: before every major commitment, they must seek out a Professor, Commander, or Healer frequency and ask a single question — 'What are we missing?' The practice is not about slowing down. It is about building the kind of credibility that makes their belief sustainable.",teamrisk:"Organizational over-promise — a culture of excitement that repeatedly fails to deliver, eroding trust until the belief that made the culture electric becomes the thing people no longer trust.",teamgain:"An almost unstoppable culture of belief and forward motion — when grounded with external reality checks, this pairing produces the most energized and resilient teams in the spectrum.",coachtip:"Ask both: 'Who in your life tells you when you're wrong — and do you actually listen to them?'"},dtm:{title:"The Amplified Believer",subtitle:"When belief has no one to challenge it",body:"Two Motivators together create one of the most electric relational environments possible. The energy is contagious, the belief is genuine, and the momentum is extraordinary — until it isn't. Without a frequency that grounds the forward motion in reality, two Motivators will consistently over-promise, under-deliver, and exhaust the people around them without understanding why.",friction:"Belief amplifying belief with no one asking whether the belief is grounded in reality. The most dangerous echo chamber is one that feels like vision.",synthesis:"When one Motivator learns to play the grounding role — asking the hard questions, naming the gaps — this pairing becomes nearly unstoppable. The key is that one of them has to be willing to be the one who slows down.",watch:"If you never disagree, you are not a partnership. You are an echo chamber. The most important question for two Motivators: who tells you when you're wrong?"}},
+  "hea-hea":{type:"mir",tdcm:{title:"The Well That Never Fills",subtitle:"When care becomes the culture's ceiling instead of its floor",dynamic:"Two Healers leading together create the warmest, most relationally rich environment in the spectrum. People feel genuinely known, genuinely safe, and genuinely cared for. The organization becomes a place people never want to leave — and also a place that rarely challenges them to become more than they already are.",coaching:"Coach both Healers to understand that the highest expression of care is not protection from discomfort — it is the creation of conditions where people are safe enough to grow. Challenge is not the opposite of care. It is, at its best, the deepest expression of it.",teamrisk:"A culture of comfort that becomes a culture of stagnation — where everyone feels loved and no one is growing, and the organization gradually loses its capacity to compete or adapt.",teamgain:"The most relationally safe and psychologically healthy team culture possible — the foundation on which any high-performance culture must be built.",coachtip:"Ask both: 'Is there something true about this team or this person that love is currently keeping you from saying?'"},dtm:{title:"The Sanctuary Without a Door",subtitle:"When safety becomes the ceiling rather than the floor",body:"Two Healers together create a depth of relational safety and mutual acceptance that is almost unparalleled. People feel genuinely known, genuinely safe, and genuinely cared for. The organization becomes a place people never want to leave — and also a place that rarely challenges them to become more than they already are.",friction:"Each Healer protecting the other from the discomfort that is actually necessary for growth. The most suffocating environments are sometimes the warmest ones.",synthesis:"When both Healers commit to the radical act of honest care — saying the hard thing precisely because they love the person — this pairing becomes the most transformative relational environment in the spectrum.",watch:"Ask each other regularly: 'Is there something true that I haven't said because I was protecting you from it?'"}},
+  "cha-cha":{type:"mir",tdcm:{title:"The Pressure Cooker",subtitle:"When disruption becomes the only language the room speaks",dynamic:"Two Challengers in the same leadership space create a culture of relentless confrontation. Standards are exceptionally high. Mediocrity is genuinely intolerable. And the people inside this culture are either forged into something extraordinary — or they leave. Often both, sequentially.",coaching:"Coach both Challengers to create explicit seasons of affirmation — not as a concession, but as a strategic investment in the sustainability of the standard they are trying to hold. People can only be challenged toward their potential if they first believe the person challenging them is on their side.",teamrisk:"A high-performing but deeply unsustainable culture — exceptional output in the short term, exodus of everyone except the most resilient in the medium term.",teamgain:"A culture of genuine excellence where standards are held with absolute clarity and the people who remain are genuinely extraordinary.",coachtip:"Ask both: 'Does this team know that you believe in them — not just in what they can produce?'"},dtm:{title:"The Unstoppable Confrontation",subtitle:"When disruption has nowhere to land",body:"Two Challengers in relationship creates a dynamic of extraordinary mutual provocation. Both see what the other is settling for. Both refuse to let it stand. The result is either the most growth-producing relationship either has ever experienced — or a war of attrition that leaves both exhausted and neither changed.",friction:"Perpetual disruption with no resting place.",synthesis:"When both Challengers learn to punctuate the challenge with genuine affirmation — when they learn to say 'I believe in you' as clearly as they say 'you can do better' — this pairing becomes the forge that produces the most extraordinary people.",watch:"Ask each other: 'Do I ever make you feel like who you are right now is enough?' If the answer is no, the challenge has become cruelty."}},
+  "com-com":{type:"mir",tdcm:{title:"The Command Collision",subtitle:"When two captains share one ship",dynamic:"Two Commanders in the same organizational space creates one of the most volatile and potentially most powerful dynamics in the spectrum. Both frequencies carry genuine authority — not positional authority, but the kind that comes from internal certainty about direction. When that certainty points in the same direction, the execution capacity is extraordinary. When it doesn't, the organization experiences something close to civil war.",coaching:"The first and most critical coaching intervention with two Commanders is structural: establish explicit domains of authority before anything else. Two Commanders who are fighting about direction are almost always fighting because the domains were never clarified. Clarity is not bureaucracy — it is the prerequisite for this pairing to function.",teamrisk:"Organizational civil war — a team divided by competing authority structures, with everyone below forced to navigate two sources of direction that are pulling against each other.",teamgain:"Exceptional execution capacity — when two Commanders are structurally aligned and operationally coordinated, they produce the most decisive and results-oriented culture in the spectrum.",coachtip:"Ask each Commander separately: 'Where do you genuinely trust this person's judgment more than your own?' The answers reveal the basis for a functional division of authority."},dtm:{title:"The Battle of Two True Norths",subtitle:"When both people are certain they know the way",body:"Two Commanders in relationship creates one of the most dynamic and potentially explosive pairings in the spectrum. Both carry genuine authority — not positional, but the kind that comes from internal certainty about direction. When that certainty points in the same direction, the execution capacity is extraordinary.",friction:"Two orientations toward authority in a space that can only have one north. The Commander's greatest blind spot is the assumption that their direction is the right one.",synthesis:"When both Commanders develop the rare capacity to follow as well as they lead — to genuinely submit to the other's authority in the domains where the other is stronger — this pairing builds the most decisive and durable institutions in the spectrum.",watch:"The Commander who cannot follow is not a leader. They are simply someone who has never met someone stronger."}},
+  "pro-pro":{type:"mir",tdcm:{title:"The Cathedral of Knowledge",subtitle:"When depth becomes the room's greatest gift — and its greatest blind spot",dynamic:"Two Professors leading together creates the most intellectually rigorous culture in the spectrum. Analysis is deep. Frameworks are sophisticated. Decisions are made with extraordinary care and grounded in genuine understanding. The organization's intellectual capital is exceptional — and its velocity is often not.",coaching:"Coach both Professors to build what might be called a 'good enough to move' threshold — an explicit agreement about what level of analysis is sufficient to justify a decision. Without this threshold, two Professors will consistently delay action in pursuit of a certainty that organizational life rarely provides.",teamrisk:"Analysis paralysis — a culture of extraordinary intellectual depth that consistently fails to convert insight into action at the speed the market requires.",teamgain:"Decisions of exceptional quality and durability — when paired with execution discipline, this pairing produces the most credible and well-grounded organizational leadership in the spectrum.",coachtip:"Ask both: 'What decision are you currently delaying because the analysis doesn't feel complete — and what would it cost you to decide now with what you know?'"},dtm:{title:"The Deepest Conversation in the Room",subtitle:"When knowledge meets its equal",body:"Two Professors together creates an intellectual environment of extraordinary depth and rigor. The analysis is sophisticated, the frameworks are robust, and the thinking is genuinely illuminating. It is also, frequently, the environment where the most important decisions get delayed the longest — because both people know exactly how much they don't yet know.",friction:"The pursuit of complete understanding delaying the action that understanding is meant to serve. Two Professors can think their way out of every decision.",synthesis:"When both Professors build a shared commitment to 'good enough to move' — a threshold below which action is required regardless of remaining uncertainty — this pairing produces the most credible and well-grounded leadership in the spectrum.",watch:"Ask each other: 'Is there a decision we've been thinking about long enough that thinking more is just a way of not deciding?' The answer to that question is almost always yes."}},
+  "see-see":{type:"mir",tdcm:{title:"Visions Without a Shore",subtitle:"When the horizon is everything and the present is forgotten",dynamic:"Two Seers in the same leadership space create a culture of extraordinary imagination and strategic ambition. The organization can perceive the future with unusual clarity and sophistication. It can also lose its connection to the present so completely that the future it perceives never becomes the future it builds.",coaching:"Coach both Seers to identify their translation partners with urgency — not as a bureaucratic requirement, but as the condition that makes their perception matter. Vision that cannot be translated into present action is not leadership. It is prophecy without a congregation.",teamrisk:"An organization that is perpetually visioning and never building — inspiring to be around, impossible to execute inside.",teamgain:"The most forward-looking strategic culture possible — organizations led by two aligned Seers can perceive and move toward futures that competitors cannot yet imagine.",coachtip:"Ask both: 'What has been true about the future for the last two years that you still haven't translated into something the organization can act on today?'"},dtm:{title:"The Horizon Without a Map",subtitle:"When two visions reach toward the same unreachable future",body:"Two Seers in relationship creates a space of almost hallucinogenic creative possibility. Both can perceive what doesn't yet exist. Both can hold futures that most people cannot imagine. The conversations are extraordinary — and the present tense is frequently forgotten entirely.",friction:"Two people living in the future with no one tending the present. The most visionary organizations can also be the most operationally chaotic.",synthesis:"When both Seers develop the discipline of translation — converting what they see into language and action that people in the present can act on today — this pairing produces the most forward-looking strategic leadership in the spectrum.",watch:"Ask each other: 'What is one thing we've seen clearly for more than a year that we still haven't translated into something the organization can act on?' The answer is where your translation work needs to begin."}},
+  "mav-mav":{type:"mir",tdcm:{title:"The Revolution That Consumes Itself",subtitle:"The most electric — and most destabilizing — mirror in the spectrum",dynamic:"Two Mavens in the same organizational space is the rarest and most intense pairing in the spectrum. Both carry a fundamentally different paradigm — a new way of seeing the organization, the market, or the world. When those paradigms align, the result is genuinely civilizational. When they don't, the organization becomes the battlefield for competing revolutions.",coaching:"The most critical coaching work with two Mavens is the articulation of shared foundations — the things they both believe that are not up for disruption. Without shared ground, two Mavens will disrupt each other as readily as they disrupt everything else, and the organization will have no stable place to stand.",teamrisk:"Organizational identity crisis — a team that cannot answer the question 'what are we building?' because the two people setting the direction are each building something different.",teamgain:"Civilizational-level innovation — when two Mavens find their shared foundation and align their paradigms, they produce the kind of thinking that doesn't just change organizations but changes industries.",coachtip:"Ask both Mavens the same question separately, then bring their answers into the room together: 'What is the one thing about this organization that you would never disrupt — and why?'"},dtm:{title:"Two New Worlds",subtitle:"The rarest meeting — and the most consequential",body:"Two Mavens in relationship is one of the rarest dynamics in human experience. Both carry a fundamentally different paradigm — a new way of seeing the organization, the market, or the world. When those paradigms align, the result is genuinely civilizational. When they don't, the relationship becomes the battlefield for competing revolutions, and everything around them becomes collateral damage.",friction:"Two paradigm shifts that may not fit in the same universe. The Maven's greatest temptation is to treat every other new reality as a threat to their own.",synthesis:"When two Mavens find the shared conviction that underlies both of their new realities — the deeper truth that makes both paradigms possible — they produce the kind of thinking that doesn't just change organizations but changes the questions entire fields are asking.",watch:"Ask each other: 'What is the deepest thing we both believe to be true — the conviction that would survive if both of our frameworks were dismantled?' That shared conviction is the only ground stable enough for two Mavens to build on."}},
+  "mot-hea":{type:"sta",tdcm:{title:"Energy Meets Empathy",subtitle:"The team's emotional engine room",dynamic:"The Motivator pushes team velocity while the Healer monitors team health. In corporate culture, this pairing creates the conditions for sustainable high performance — the Motivator ensures the team never stops believing, while the Healer ensures the team never stops trusting. Without the Healer, the Motivator creates burnout. Without the Motivator, the Healer creates comfort that never becomes excellence.",coaching:"Coach the Motivator to create regular check-in rituals — not as a slowdown, but as a performance intelligence system. Coach the Healer to name unsustainable patterns directly rather than quietly absorbing team distress. Both frequencies need to see each other as essential to the same outcome.",teamrisk:"Motivator burns the team out; Healer silently manages the fallout without escalating. The result is a culture that runs hot until it collapses.",teamgain:"A culture where people feel both energized and genuinely cared for — the foundation of long-term high performance.",coachtip:"Ask the Motivator: 'What signals would tell you the team is running on empty?' Ask the Healer: 'What have you been managing quietly that the team needs to hear directly?'"},dtm:{title:"Fire Held in Water",subtitle:"The pairing that heals while it ignites",body:"The Motivator pushes team velocity; the Healer monitors team health. Together they regulate the pace a team can sustainably run. Either one dominant without the other produces either burnout or stall.",friction:"The Motivator's urgency can overwhelm the Healer's need for slowness. The Healer's depth can feel like resistance to the Motivator's momentum.",synthesis:"A team culture where people feel both stirred and safe — challenged without shame, seen without sentiment.",watch:"The Motivator must learn to sit in the silence the Healer opens. The Healer must learn not to let safety become stagnation."}},
+  "mot-cha":{type:"amp",tdcm:{title:"Belief Meets Disruption",subtitle:"The performance accelerator — handle with care",dynamic:"Both frequencies are aimed at unlocking human potential, but through opposite doors. The Motivator unlocks potential through belief; the Challenger unlocks potential through confrontation. When aligned, this pairing creates the highest-performing cultures in the spectrum. When misaligned, it creates confusion — people feel simultaneously inspired and inadequate.",coaching:"Coach the Motivator to explicitly lay relational groundwork before the Challenger raises the bar. Coach the Challenger to deliver confrontation inside a framework of genuine belief in the person. The sequence matters: belief first, challenge second.",teamrisk:"Team members feel simultaneously inspired and inadequate — high anxiety, high turnover among those who cannot reconcile the two messages.",teamgain:"A performance culture that genuinely stretches people while making them believe they can reach further than they thought.",coachtip:"Ask the team: 'Do you feel believed in here, or just pushed?' The answer tells you which frequency is currently dominant — and what adjustment is needed."},dtm:{title:"Fuel on Flame",subtitle:"The most relentless pairing in the spectrum",body:"Two frequencies that both refuse comfort, both demand more, both believe the best is ahead. The Motivator believes in people; the Challenger believes in what people are capable of becoming. When these two move together, complacency has nowhere to hide.",friction:"Without counterweight, this pairing can become relentless pressure with no landing place. Belief without truth-telling becomes cheerleading; challenge without warmth becomes cruelty.",synthesis:"At their best, this is the pairing that produces extraordinary human achievement — the coach and the fire within the same conversation.",watch:"This pairing must consciously create space for rest, grief, and integration. Not every moment should be forward motion."}},
+  "mot-com":{type:"con",tdcm:{title:"Inspiration Meets Infrastructure",subtitle:"The full arc from vision to execution",dynamic:"The Motivator generates belief, excitement, and forward energy. The Commander converts that energy into structure, accountability, and results. In corporate culture, this pairing represents the full arc from inspiration to execution — neither can complete the work without the other, and both frequently underestimate how much they need the other.",coaching:"Coach the Motivator to honor the Commander's need for closure and commitment. Coach the Commander to honor the Motivator's need for space and possibility. The failure of this pairing is almost always a failure of mutual respect for what the other frequency provides.",teamrisk:"Endless inspiration without execution, or rigid execution that kills creative energy — the organization oscillates between vision and grind.",teamgain:"A culture that both dreams and delivers — the rare organization that is exciting to be part of and effective to work in.",coachtip:"When this pairing clashes, ask: 'Are we in an inspiration conversation or an execution conversation right now?' Making that distinction explicit dissolves most of the conflict."},dtm:{title:"Energy & Order",subtitle:"The pairing that turns inspiration into institution",body:"The Motivator generates electricity; the Commander builds the grid. One creates the surge, the other directs the current. Where the Motivator sees possibility, the Commander sees pathway — and both are essential if anything is going to last.",friction:"The Motivator finds structure constraining; the Commander finds unbounded energy destabilizing. They will frustrate each other in proportion to how much they need each other.",synthesis:"This pairing built civilizations. The vision gets people moving; the direction gets them somewhere. Together, they turn inspiration into institution.",watch:"Neither frequency should dominate. When the Commander leads, things get efficient but not alive. When the Motivator leads, things get alive but not structured."}},
+  "mot-pro":{type:"con",tdcm:{title:"Enthusiasm Meets Evidence",subtitle:"The credibility gap that can make or break culture",dynamic:"The Motivator communicates through energy, story, and emotional resonance. The Professor communicates through data, rigor, and analytical precision. In corporate culture, this pairing creates the most common credibility tension: the Motivator's claims feel unsupported to the Professor; the Professor's analysis feels inert to the Motivator.",coaching:"Coach the Motivator to earn their claims with evidence before presenting. Coach the Professor to lead with the implication before the analysis — tell people what the data means before telling them what the data is. Both need to enter the other's communication register.",teamrisk:"Culture splits into 'feelers' and 'thinkers' — emotional silos that talk past each other and gradually stop collaborating.",teamgain:"Decisions that are both analytically sound and organizationally inspiring — teams that move with both confidence and clarity.",coachtip:"Ask the Motivator: 'What's the data behind that?' Ask the Professor: 'What do you want people to feel about this information?' Both questions reveal the blind spot."},dtm:{title:"Heart & Mind",subtitle:"The pairing that makes truth move people",body:"The Motivator speaks to the will; the Professor speaks to the understanding. One moves people; the other equips them. When these two work together, the result is communication that both ignites and informs — people who feel and know.",friction:"The Motivator sees the Professor as too slow, too careful, too qualified. The Professor sees the Motivator as too fast, too imprecise, too feeling.",synthesis:"This is the pairing that produces teachers who move rooms and motivators who actually change behavior — not just moods.",watch:"The Professor must learn to let emotion carry the truth. The Motivator must learn to let truth slow down the emotion."}},
+  "mot-see":{type:"cat",tdcm:{title:"Belief Meets Vision",subtitle:"The movement-building pairing",dynamic:"The Seer sees where the organization needs to go — often years before others can perceive it. The Motivator makes people believe they can get there. In corporate culture, this pairing is the engine of organizational movements — the Seer provides the direction, the Motivator provides the fuel. Without each other, the Seer's vision remains abstract and the Motivator's energy remains directionless.",coaching:"Coach the Seer to partner explicitly with a Motivator before launching any major initiative — the vision needs a carrier. Coach the Motivator to invest time understanding the Seer's vision deeply enough to communicate it authentically, not just enthusiastically.",teamrisk:"Inspirational messaging that lacks strategic depth — or strategic depth that never lands with the team because no one made it believable.",teamgain:"Organizational alignment around a future that people both understand and believe in — the conditions for genuine collective momentum.",coachtip:"Ask the Seer: 'Who on this team can make others believe in what you see?' Ask the Motivator: 'Do you understand this vision deeply enough to answer hard questions about it?'"},dtm:{title:"Wings & Wind",subtitle:"The pairing that turns vision into a movement",body:"The Seer holds the impossible image; the Motivator makes people believe they can reach it. One reveals the horizon; the other gives people the courage to walk toward it. This is how movements begin.",friction:"Seers can become so fixed on the vision that they forget to tend to the people. Motivators can generate so much energy that they outrun the vision entirely.",synthesis:"At full expression, this pairing produces the prophetic leader — someone who sees further than anyone else and makes others want to follow.",watch:"Vision without people is a fantasy. Energy without direction is chaos. This pairing must constantly return to both."}},
+  "mot-mav":{type:"cat",tdcm:{title:"Belief Meets Revolution",subtitle:"The culture change accelerator",dynamic:"The Maven arrives with a new paradigm — a fundamentally different way of thinking about the organization, the market, or the work. The Motivator makes that paradigm feel possible, desirable, and within reach. In corporate culture, this pairing is what separates culture change that actually happens from culture change that gets announced and then quietly abandoned.",coaching:"Coach the Maven to brief the Motivator thoroughly before any all-hands or culture communication — the Motivator needs to genuinely believe in the new direction, not just perform belief in it. Coach the Motivator to ask hard questions of the Maven's framework before amplifying it.",teamrisk:"Culture transformation that feels exciting on paper but hollow in practice — people sense the Motivator is performing belief rather than expressing it.",teamgain:"Genuine culture adoption — a team that doesn't just understand the new direction but actually wants to go there.",coachtip:"Ask the Motivator: 'Do you actually believe this, or are you just performing belief?' The honesty of the answer determines everything about whether the transformation lands."},dtm:{title:"Belief & Becoming",subtitle:"The pairing that makes the impossible ordinary",body:"The Maven sees a world that doesn't exist yet; the Motivator believes it can. One deconstructs what is; the other builds belief in what could be. Together, they don't just inspire — they restructure reality.",friction:"The Maven's disruption can destabilize even the Motivator's belief. The Motivator's positivity can flatten the Maven's necessary complexity.",synthesis:"This is the pairing that makes revolutions feel like invitations. The world changes when people are given both the new paradigm and the belief they can inhabit it.",watch:"Both frequencies must be grounded by relationship, data, and present reality, or they can build castles in air together."}},
+  "hea-cha":{type:"dis",tdcm:{title:"Safety Meets Disruption",subtitle:"The most important tension in coaching culture",dynamic:"This is the most critical pairing for corporate coaches to understand. The Healer creates the psychological safety that makes people willing to be honest. The Challenger creates the productive discomfort that makes honesty necessary. In corporate culture, most organizations have one without the other — and both failures are catastrophic in different ways.",coaching:"Coach leaders to understand that safety and challenge are not opposites — they are partners. Safety without challenge produces comfort that never becomes growth. Challenge without safety produces fear that never becomes honesty. The highest-performing cultures hold both simultaneously.",teamrisk:"Either a culture of fear (Challenger without Healer) or a culture of comfort (Healer without Challenger). Both feel stable until they fail — one through exodus, one through stagnation.",teamgain:"The highest-performing team culture: one where people feel safe enough to be honest and challenged enough to grow.",coachtip:"Ask the team: 'Do you feel safe enough to say what you actually think here?' Then ask: 'Do you feel challenged enough to become something more than you currently are?' Both answers together tell you where the culture actually lives."},dtm:{title:"Tenderness & Edge",subtitle:"Most disruptive to relationship dynamics",body:"The Healer creates safety; the Challenger breaks it open. One says you are loved as you are; the other says you are called to more. This is the most disorienting pairing — and the most transformative — because it refuses to let comfort become complacency.",friction:"The Healer's instinct to protect can prevent the Challenger from doing necessary, painful work. The Challenger's confrontation can rupture the trust the Healer spent years building.",synthesis:"The rare person who holds both is the greatest gift: a presence that sees your wound and your potential simultaneously, and refuses to honor one at the expense of the other.",watch:"This pairing requires extraordinary trust and timing. Challenge before trust is violence. Healing without challenge is sentiment."}},
+  "hea-com":{type:"con",tdcm:{title:"Culture Meets Execution",subtitle:"The tension every scaling organization must navigate",dynamic:"The Commander drives execution — decisions, accountability, results. The Healer maintains the relational health that makes sustained execution possible. In corporate culture, this pairing represents the central tension of scaling: you need the Commander's discipline to grow, and you need the Healer's attunement to keep the people who make growth possible.",coaching:"Coach the Commander to understand that culture is not separate from execution — it is the medium through which execution happens. Coach the Healer to understand that relational health without direction produces warmth that never becomes performance.",teamrisk:"High execution, low sustainability — results in the short term, exodus in the medium term as the people who made the results possible leave.",teamgain:"An organization that performs at a high level and retains the people who make that performance possible — the compound return of aligned culture and execution.",coachtip:"Ask the Commander: 'What is the cost of the culture you are currently creating?' Ask the Healer: 'What performance standard would you be willing to hold, even when it's uncomfortable?'"},dtm:{title:"Warmth & Spine",subtitle:"The pairing that leads without losing people",body:"The Commander moves with authority; the Healer moves with care. Where the Commander holds the line, the Healer holds the person. Together they embody the kind of leadership people remember for the rest of their lives.",friction:"The Commander can override the emotional intelligence the Healer is trying to cultivate. The Healer can soften decisions the Commander knows need to remain firm.",synthesis:"Organizations led by this pairing become places of both accountability and belonging — cultures where people are held to a standard and held in care.",watch:"The Commander must never weaponize the Healer's warmth. The Healer must never undermine the Commander's necessary authority."}},
+  "hea-pro":{type:"sta",tdcm:{title:"Trust Meets Competency",subtitle:"The foundation of a learning culture",dynamic:"The Healer creates the relational safety for people to admit what they don't know. The Professor creates the knowledge frameworks that give people something to learn. In corporate culture, this pairing builds what most organizations claim to want and few actually have: a genuine learning culture — one where people grow because they feel both safe enough to be a beginner and equipped enough to become an expert.",coaching:"Coach the Healer to channel their relational attunement toward learning — create environments where not knowing is welcomed as the beginning of growth, not managed as a liability. Coach the Professor to deliver expertise with the kind of relational warmth that makes people want to learn rather than feel evaluated.",teamrisk:"Either people feel safe but underdeveloped, or people are technically competent but isolated — the organization has knowledge or belonging, but not both.",teamgain:"A genuine learning culture — where people grow because they feel both safe enough to admit gaps and equipped enough to close them.",coachtip:"Ask the team: 'Is there anything you don't know that you're afraid to admit here?' The answer reveals whether the Healer's safety and the Professor's expertise are actually integrated."},dtm:{title:"Understood & Understanding",subtitle:"The pairing that serves the whole person",body:"The Healer makes you feel known; the Professor gives you the tools to know. One tends to your interior world; the other gives you a map of the exterior. Together, they create the conditions for deep, lasting growth.",friction:"The Healer may resist the Professor's intellectualism as a way of avoiding feeling. The Professor may resist the Healer's emotionalism as imprecise and unverifiable.",synthesis:"At their best, this pairing produces the kind of wisdom that is both true and kind — knowledge that doesn't wound, healing that doesn't avoid reality.",watch:"Neither frequency should let their comfort zone become the limit of the other's contribution."}},
+  "hea-see":{type:"cat",tdcm:{title:"Present Health Meets Future Vision",subtitle:"The long-term culture builder",dynamic:"The Seer sees where the organization needs to go in three to ten years. The Healer knows whether the team is actually capable of getting there. In corporate culture, this pairing is the most underutilized check on strategic overreach — and the most underutilized engine of genuinely executable long-range planning.",coaching:"Coach the Seer to explicitly consult the Healer before finalizing any culture or people strategy. Coach the Healer to translate their relational intelligence into strategic input — not just 'the team feels this way' but 'here is what that means for what we can realistically achieve in this timeframe.'",teamrisk:"Visionary plans that fail because leadership didn't accurately assess the team's current capacity, trust level, or readiness for change.",teamgain:"Strategic plans that are both ambitious and executable — because they were built with an accurate understanding of where the people actually are.",coachtip:"Before any major initiative, ask the Healer privately: 'Is this team ready for what we're about to ask of them?' Their answer should shape the launch strategy."},dtm:{title:"The Now & The Not Yet",subtitle:"The pairing that grounds hope in the present",body:"The Seer reaches toward the future; the Healer tends to the present wound. One calls people forward; the other meets them where they are. This pairing holds the necessary tension between where people are and where they're going.",friction:"Seers can become so oriented to the future that they miss the current pain in the room. Healers can become so attentive to present suffering that they lose sight of the horizon.",synthesis:"The Seer gives the Healer's work a destination. The Healer gives the Seer's vision a human face. Together they produce hope that is both real and livable.",watch:"Neither frequency should be sacrificed. People need to be met in their pain and called toward their future — not one or the other."}},
+  "hea-mav":{type:"cat",tdcm:{title:"Belonging Meets Disruption",subtitle:"The human infrastructure of transformation",dynamic:"The Maven brings the new framework — a fundamentally different way of operating, competing, or creating value. The Healer determines whether the people inside the organization can make it through the transition intact. In corporate culture, most transformations fail not because the new model is wrong but because the human cost of transition is never properly accounted for.",coaching:"Coach the Maven to never launch a transformation without a clear Healer strategy in place — someone who is specifically responsible for the relational health of the organization during the transition period. Coach the Healer to engage with the Maven's framework early, so they can anticipate the human cost before it becomes a crisis.",teamrisk:"Transformation that produces the new operating model but destroys the trust, belonging, and relational capital that made the organization function.",teamgain:"An organization that successfully becomes something new while keeping its people — the rarest and most valuable outcome of organizational transformation.",coachtip:"Ask after any major change: 'Do people still feel like they belong here?' If the answer is uncertain, the Healer's work is not complete, regardless of how successful the transformation looks on paper."},dtm:{title:"Wholeness & Revolution",subtitle:"The pairing that makes transformation feel like coming home",body:"The Maven dismantles paradigms; the Healer reassembles people. One breaks the old world open; the other helps you inhabit the new one without losing yourself. This is the pairing that makes revolution tender.",friction:"The Maven's disruption can create more wounds than the Healer has capacity to tend. The Healer's pace can feel like resistance to the Maven's urgency.",synthesis:"When these two work together, people don't just change their minds — they change without being destroyed. The transformation is as whole as the person.",watch:"The Maven must honor the cost of change. The Healer must not let the cost become a reason to refuse the change."}},
+  "cha-com":{type:"amp",tdcm:{title:"Accountability Meets Authority",subtitle:"The high-performance culture engine",dynamic:"The Commander establishes the structure, authority, and direction that make execution possible. The Challenger holds the organization accountable to its stated standards — including holding the Commander accountable. In corporate culture, this pairing creates the most demanding and most effective performance cultures in the spectrum, when it works. When it doesn't, it creates cultures of pressure without humanity.",coaching:"Coach the Commander to build explicit recovery and recognition into the performance culture — accountability without celebration is just relentless pressure. Coach the Challenger to direct their confrontational energy at systems and standards, not at people — the question is always 'why isn't this working' not 'why aren't you working.'",teamrisk:"A results culture that eats its own — high performers burn out or leave; everyone else learns to survive rather than excel.",teamgain:"A culture of genuine excellence — where high standards are held with clarity, fairness, and enough humanity that people want to meet them.",coachtip:"Ask the team: 'Do you know exactly what is expected of you? Do you believe it is achievable? Do you believe the standard is applied fairly?' All three must be true for this pairing to work."},dtm:{title:"Provocation & Authority",subtitle:"The engine of institutional change",body:"The Challenger questions everything; the Commander decides everything. Separately, they can become obstruction or autocracy. Together, they become the engine that drives institutions toward their highest expression — challenged from within, led with conviction.",friction:"The Commander can experience the Challenger as insubordination. The Challenger can experience the Commander as rigidity.",synthesis:"The most transformative organizations are built on this tension: leadership that is both decisive and willing to be questioned.",watch:"This pairing must agree on the ground rules — or it devolves into power struggles that destroy what they're both trying to build."}},
+  "cha-pro":{type:"dis",tdcm:{title:"Disruption Meets Depth",subtitle:"The intellectual integrity of the organization",dynamic:"The Professor builds the knowledge frameworks, data systems, and analytical depth that give the organization its intellectual credibility. The Challenger questions whether those frameworks are still serving the organization — or have become the thing that is limiting it. In corporate culture, this is the tension between expertise and inquiry, between what we know and what we're afraid to not know.",coaching:"Coach the Professor to distinguish between defending expertise (appropriate) and defending the frameworks that organize expertise (often inappropriate). The expertise is earned; the framework is always provisional. Coach the Challenger to engage with the Professor's knowledge seriously before challenging its conclusions — uninformed challenge is noise; informed challenge is progress.",teamrisk:"Either intellectual sclerosis — expertise that has become untouchable — or intellectual chaos — challenge without the depth to produce anything better than what it disrupts.",teamgain:"An organization with rigorous thinking that is genuinely open to being wrong — the intellectual foundation of genuine innovation.",coachtip:"Ask the Professor: 'What assumption in our current model are you most afraid to question?' Ask the Challenger: 'Have you done the work to understand what you're challenging deeply enough to offer something better?'"},dtm:{title:"Question & Answer",subtitle:"The Socratic tension at the heart of learning",body:"The Challenger asks the question that shouldn't be asked. The Professor has spent years building the answer. When these two meet, either the answer deepens — or it crumbles. Both outcomes serve truth.",friction:"The Professor's expertise can feel like a ceiling to the Challenger. The Challenger's questioning can feel like disrespect to the Professor's life's work.",synthesis:"The greatest teachers and thinkers hold both. They've built the framework and they know it must always be questioned. Knowledge becomes wisdom when it survives challenge.",watch:"Challenge without expertise is noise. Expertise without challenge becomes dogma. This pairing needs each other more than either will admit."}},
+  "cha-see":{type:"amp",tdcm:{title:"Confrontation Meets Vision",subtitle:"The strategic discomfort that drives real change",dynamic:"The Seer perceives where the organization needs to go. The Challenger names what is preventing the organization from getting there. In corporate culture, this pairing is the engine of honest strategic work — the Seer provides the destination, the Challenger removes the obstacles that politeness would otherwise leave in place.",coaching:"Coach the Seer to partner with the Challenger before strategy presentations — the Challenger's job is to stress-test the vision before it goes public, not to undermine it after. Coach the Challenger to use the Seer's vision as a standard against which current reality is measured, not as a target for skepticism.",teamrisk:"Strategy sessions that are either too safe (no one names the real problem) or too confrontational (the vision gets dismantled before it can inspire anyone).",teamgain:"Honest, generative strategy work — where the real obstacles are named and the real destination is held with genuine conviction.",coachtip:"In any strategy session, give the Seer the first word and the Challenger the second. Let the vision land before the challenge begins. Sequence determines everything."},dtm:{title:"Fire & Horizon",subtitle:"The prophetic voice that refuses the status quo",body:"The Seer holds the image of what could be; the Challenger refuses to accept anything less. Together they become the prophetic voice — the one that names what everyone else has accepted and calls it insufficient.",friction:"Both frequencies can become isolated in their certainty about a different world. Without relational groundedness, they can lose the people they're trying to bring along.",synthesis:"This is the pairing that launches movements. When the horizon is held with equal parts imagination and confrontation, the status quo becomes untenable.",watch:"The world needs what this pairing carries — but it will always be uncomfortable. Learn to distinguish between the discomfort of growth and the damage of disruption."}},
+  "cha-mav":{type:"amp",tdcm:{title:"Disruption Meets Revolution",subtitle:"The most powerful — and most destabilizing — pairing in corporate culture",dynamic:"This is the highest-octane pairing in the spectrum for organizational change. The Challenger names what is not working; the Maven replaces it with something fundamentally new. Together, they produce the conditions for genuine transformation — and the conditions for organizational crisis, if not carefully managed.",coaching:"Coach both frequencies to understand that sustainable transformation requires periods of stabilization between disruptions. The Challenger and Maven together can generate more change than an organization can metabolize — and unmeasured change destroys the trust and stability that transformation requires.",teamrisk:"A culture of permanent revolution — exhausting, identity-eroding, and ultimately self-defeating as people lose the sense of ground beneath them.",teamgain:"Genuine organizational transformation — when sequenced with stabilization, this pairing produces the deepest and most durable change in the spectrum.",coachtip:"Ask both frequencies: 'What are we trying to build, not just what are we trying to change?' The answer reveals whether there is a coherent destination — or just productive destruction."},dtm:{title:"Confrontation & Revolution",subtitle:"The most world-altering pairing in the spectrum",body:"The Challenger confronts what is. The Maven replaces it with something entirely new. When these two align, nothing is safe — which means everything is possible. This is the pairing that ends eras.",friction:"Without relational wisdom, this pairing can become destructive — burning down what exists without building anything in its place.",synthesis:"History's great revolutions were catalyzed by this pairing: the confrontation that made the old world untenable, and the new paradigm that made the future livable.",watch:"The most dangerous version of this pairing is when it becomes self-referential — when the challenge and the revolution become the point, rather than the people they're for."}},
+  "com-pro":{type:"sta",tdcm:{title:"Execution Meets Expertise",subtitle:"The operational backbone of high-performing organizations",dynamic:"The Commander drives decisions, accountability, and results. The Professor provides the analytical depth and knowledge architecture that make those decisions trustworthy. In corporate culture, this pairing is the engine of operational excellence — the Commander ensures things get done; the Professor ensures the right things get done in the right way.",coaching:"Coach the Commander to resist the temptation to move before the Professor has had adequate time to analyze. Coach the Professor to deliver analysis in formats that serve decisions, not just demonstrate rigor — the question is always 'what should we do' not 'what do we know.'",teamrisk:"An organization that is operationally sound but creatively stuck — excellent at executing last decade's model with precision.",teamgain:"Decisions made with authority, speed, and genuine analytical grounding — the operational foundation that makes everything else possible.",coachtip:"If this pairing dominates your leadership team, ask: 'Who in this room carries the vision for what we're building toward — not just how we're operating today?'"},dtm:{title:"Direction & Depth",subtitle:"The backbone of every effective institution",body:"The Commander provides direction; the Professor provides the depth of knowledge that makes that direction trustworthy. One says where we're going; the other explains why it's the right way. Together they build the kind of leadership that earns long-term trust.",friction:"The Commander can outpace the Professor's need for thoroughness. The Professor can slow the Commander beyond what the moment allows.",synthesis:"This pairing produces the most credible institutions — ones that move with conviction and can defend that conviction with knowledge.",watch:"Speed and depth are both essential. The Commander must not lead without understanding. The Professor must not require certainty before movement."}},
+  "com-see":{type:"con",tdcm:{title:"Today Meets Tomorrow",subtitle:"The strategic tension every leadership team must hold",dynamic:"The Commander owns today — the quarter, the execution plan, the accountability structure. The Seer owns tomorrow — the three-year horizon, the emerging opportunity, the strategic inflection point. In corporate culture, this is the most common leadership team tension and the most consequential: too much Commander and the organization executes its way into irrelevance; too much Seer and the organization visions its way into insolvency.",coaching:"Coach the Commander to protect time and resources for the Seer's work — not as a luxury, but as a survival function. Coach the Seer to translate their perception into terms the Commander can act on — not just 'where we need to go' but 'what we need to decide now to be able to get there.'",teamrisk:"Executing your way into irrelevance — the classic innovator's dilemma — or visioning your way into organizational dysfunction.",teamgain:"An organization that delivers in the present and builds for the future simultaneously — the strategic posture that produces durable competitive advantage.",coachtip:"Ask your leadership team: 'What percentage of our collective attention is on this year versus next decade?' The answer reveals whether your strategic portfolio is balanced."},dtm:{title:"Execution & Imagination",subtitle:"The perennial tension between what is and what could be",body:"The Commander builds the world that is; the Seer holds the world that could be. This is the tension between institution and inspiration — and both are essential. Without the Seer, the Commander builds prisons. Without the Commander, the Seer builds fantasies.",friction:"The Commander sees the Seer's vision as impractical. The Seer sees the Commander's execution as limiting.",synthesis:"When these two work together, organizations move with both ambition and structure — they build things that last and dream of things that don't exist yet.",watch:"Neither should be allowed to win completely. The best organizations hold this tension in permanent, productive conversation."}},
+  "com-mav":{type:"dis",tdcm:{title:"Structure Meets Disruption",subtitle:"The most intense organizational clash in corporate culture",dynamic:"The Commander has built the structure, the culture, the systems of trust and accountability that make the organization function. The Maven is proposing to replace it. In corporate culture, this is the most politically charged tension in the spectrum — the Commander experiences the Maven as existentially threatening; the Maven experiences the Commander as the primary obstacle to necessary change.",coaching:"Coach the Commander to distinguish between structures that serve the mission and structures that have become the mission. Coach the Maven to understand that the Commander's resistance is not always conservatism — sometimes it is institutional wisdom about what actually holds organizations together.",teamrisk:"Innovation theater — the organization talks about transformation while the Commander's structure quietly neutralizes every Maven initiative.",teamgain:"Genuine organizational evolution — a structure that becomes something new while maintaining enough continuity that people can trust the transition.",coachtip:"Ask both privately: 'What would you need to trust this person's intentions completely?' The answer reveals what the relationship actually needs — and what the organization needs from both of them."},dtm:{title:"Structure & Disruption",subtitle:"Most intense organizational tension in the spectrum",body:"The Commander builds the structure; the Maven dismantles it. This is the tension at the heart of every organization that wants to last and stay alive — you need the form, and you need the force that keeps it from calcifying.",friction:"The Commander experiences the Maven as existentially threatening. The Maven experiences the Commander as the embodiment of everything that must change.",synthesis:"Organizations that survive centuries hold this tension. They build structures that are strong enough to last and permeable enough to transform.",watch:"This pairing will conflict. The question is whether that conflict produces evolution or implosion. Trust and shared mission are the difference."}},
+  "pro-see":{type:"cat",tdcm:{title:"Analysis Meets Intuition",subtitle:"The intelligence architecture of strategic organizations",dynamic:"The Professor knows the organization, the market, and the data with deep rigor. The Seer perceives what the data cannot yet show — the emerging pattern, the inflection point that hasn't registered in the numbers. In corporate culture, this pairing produces the most sophisticated strategic intelligence available — when it works. When it doesn't, each frequency dismisses the other's epistemology entirely.",coaching:"Coach the Professor to explicitly name the limits of their analysis — what the data can tell you and what it cannot. Coach the Seer to translate perception into language the Professor can engage with — not just 'I sense this' but 'here is what I'm observing that makes me believe this.'",teamrisk:"Either over-reliance on data that misses the emerging strategic reality, or visionary intuition that lacks the analytical grounding to be acted on responsibly.",teamgain:"Strategic intelligence that is both analytically credible and perceptually ahead — the combination that produces genuinely predictive organizational thinking.",coachtip:"In strategy sessions, explicitly ask the Professor to present what is known, then ask the Seer to present what they perceive that isn't yet in the data. Treat both as legitimate inputs to the same decision."},dtm:{title:"Knowledge & Revelation",subtitle:"Where rigor meets revelation",body:"The Professor knows what has been proven; the Seer sees what hasn't been verified yet. Together they hold the tension between accumulated wisdom and emerging truth — between what we know and what we're being shown.",friction:"The Professor requires evidence. The Seer operates on intuition. Both can be right. Both can be arrogant about how they know what they know.",synthesis:"The greatest breakthroughs in human history happened when rigorous minds encountered genuine revelation — when knowledge became the soil in which vision could take root.",watch:"The Professor must remain open to what hasn't been proven yet. The Seer must remain accountable to what has."}},
+  "pro-mav":{type:"dis",tdcm:{title:"Expertise Meets Reinvention",subtitle:"The most intellectually charged tension in organizational life",dynamic:"The Professor's expertise is the organization's knowledge capital — built over years of rigorous study, careful analysis, and accumulated pattern recognition. The Maven is proposing that the framework organizing that expertise needs to be replaced. In corporate culture, this is the tension between institutional knowledge and paradigm shift — and it is the tension most likely to determine whether an organization can genuinely adapt.",coaching:"Coach the Professor to build what might be called 'expertise humility' — the capacity to hold deep knowledge loosely enough that it can be reorganized. Coach the Maven to engage seriously with the Professor's expertise before proposing to transcend it — genuine paradigm shifts are built on deep knowledge of the paradigm being replaced.",teamrisk:"Institutional blindness — the organization's deepest experts become the most committed defenders of the framework that is limiting the organization.",teamgain:"Organizations that can genuinely reinvent themselves — because their experts are capable of reorganizing their knowledge around a new paradigm rather than defending the old one.",coachtip:"Ask the Professor: 'Which part of your expertise do you hold so tightly that you would resist evidence that challenged it?' That is the answer to where the paradigm shift needs to begin."},dtm:{title:"Mastery & Metamorphosis",subtitle:"The intellectual collision that advances human understanding",body:"The Professor has built a framework. The Maven has arrived to replace it. This is the most intellectually intense pairing — the one that has produced every paradigm shift in human history, and every war between them.",friction:"The Professor has invested decades in a framework. The Maven dismantles it in a conversation. The loss is real. The resistance is understandable.",synthesis:"When the Professor can hold both their mastery and their beginner's mind, the Maven doesn't destroy — they complete. The framework doesn't fall; it expands.",watch:"The Maven must honor the cost of dismantling what someone has built. The Professor must not let the investment in a framework become idolatry."}},
+  "see-mav":{type:"amp",tdcm:{title:"Vision Meets Paradigm",subtitle:"The furthest edge of organizational thinking",dynamic:"This is the most forward-leaning pairing in corporate culture — and the most frequently misunderstood. The Seer sees the future the organization needs to move toward. The Maven sees the fundamental shift in thinking required to get there. Together, they don't just perceive the future — they construct the conceptual architecture that makes it possible for others to inhabit it.",coaching:"Coach organizations to create protected space for this pairing — not a skunkworks project, but a recognized and resourced function with explicit permission to think beyond current constraints. Coach both frequencies to invest in translation — the most valuable thing they can do is make their perception legible to the people who need to act on it.",teamrisk:"The most valuable strategic insight in the organization sits in a room that no one with decision-making authority ever enters.",teamgain:"An organization that doesn't just respond to the future but creates it — the definition of genuine strategic leadership.",coachtip:"Ask your board or executive team: 'Where are your Seers and Mavens, and who has the authority to act on what they perceive?' If the answer is unclear, your strategic intelligence is being wasted."},dtm:{title:"The Prophets",subtitle:"The frequency that changes what's possible",body:"Two frequencies that both see what doesn't exist yet. The Seer holds the image; the Maven holds the new paradigm. When they align, they don't just predict the future — they create the conditions for it. This is the rarest and most powerful pairing in the spectrum.",friction:"Both can become so oriented to the future that they lose connection to the present moment and the people in it.",synthesis:"History belongs to the people who could see further than their moment allowed. This pairing produces those people — the ones who didn't just see the future, but made it possible.",watch:"The greatest danger for this pairing is isolation. Come back to earth regularly."}},
+};
+
+function getTension(a,b){return TENSIONS[`${a}-${b}`]||TENSIONS[`${b}-${a}`]||null;}
+function getTensionContent(t,mode){
+  if(!t)return null;
+  if(mode==="dynamics"&&t.tdcm)return{mode:"dynamics",...t.tdcm,isDraft:false};
+  if(mode==="tensions"&&t.dtm)return{mode:"tensions",...t.dtm,isDraft:t.dtm._draft===true};
+  return null;
+}
+
+const SAMPLE_TEAM={name:"Sample Executive Team",members:[
+  {id:"p1",name:"Dana K.",role:"CEO",scores:{mot:65,hea:35,cha:80,com:70,pro:40,see:85,mav:50}},
+  {id:"p2",name:"Marcus L.",role:"COO",scores:{mot:45,hea:30,cha:60,com:90,pro:75,see:35,mav:20}},
+  {id:"p3",name:"Priya R.",role:"Head of People",scores:{mot:70,hea:90,cha:40,com:35,pro:50,see:45,mav:30}},
+  {id:"p4",name:"Jin O.",role:"CTO",scores:{mot:30,hea:40,cha:50,com:55,pro:85,see:70,mav:80}},
+  {id:"p5",name:"Sofia A.",role:"CMO",scores:{mot:85,hea:55,cha:65,com:40,pro:35,see:75,mav:45}},
+]};
+
+// ─── STORAGE (localStorage) ───────────────────────────────────────────────
+const storage={
+  save(team){
+    const key=`7f_team_${team.name.replace(/\s+/g,"_").toLowerCase()}`;
+    try{localStorage.setItem(key,JSON.stringify(team));return key;}catch(e){return null;}
+  },
+  delete(key){try{localStorage.removeItem(key);}catch(e){}},
+  list(){
+    const keys=[];
+    try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith("7f_team_"))keys.push(k);}}catch(e){}
+    return keys;
+  },
+  load(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
+};
+
+// ─── COMPUTATION ─────────────────────────────────────────────────────────
+function computeTensionGrid(members){
+  const grid={};FREQ.forEach(fa=>FREQ.forEach(fb=>{grid[`${fa.id}-${fb.id}`]=0;}));
+  if(members.length<2)return{grid,max:0};
+  for(let a=0;a<members.length;a++)for(let b=a+1;b<members.length;b++){
+    const A=members[a].scores,B=members[b].scores;
+    for(let i=0;i<FREQ.length;i++)for(let j=0;j<FREQ.length;j++){
+      const f1=FREQ[i].id,f2=FREQ[j].id;
+      if(i===j)grid[`${f1}-${f2}`]+=(A[f1]*B[f1])/100;
+      else if(i<j){const c=(A[f1]*B[f2]+A[f2]*B[f1])/100;grid[`${f1}-${f2}`]+=c;grid[`${f2}-${f1}`]+=c;}
+    }
+  }
+  let max=0;Object.values(grid).forEach(v=>{if(v>max)max=v;});return{grid,max};
+}
+
+function computeSignature(members,gridData){
+  if(!members.length)return null;
+  const avg={};FREQ.forEach(f=>{avg[f.id]=members.reduce((s,m)=>s+(m.scores[f.id]||0),0)/members.length;});
+  const present=FREQ.filter(f=>avg[f.id]>=50),absent=FREQ.filter(f=>avg[f.id]<30);
+  const mirrors=[];
+  FREQ.forEach(f=>{const cs=members.filter(m=>{const dom=FREQ.reduce((b,ff)=>(m.scores[ff.id]>(m.scores[b.id]||0))?ff:b,FREQ[0]);return dom.id===f.id&&m.scores[f.id]>=60;});if(cs.length>=2)mirrors.push({freq:f,carriers:cs});});
+  const typeLoad={amp:0,con:0,cat:0,sta:0,dis:0,mir:0};
+  if(gridData.max>0){Object.entries(gridData.grid).forEach(([key,val])=>{const[f1,f2]=key.split("-");if(FREQ.findIndex(f=>f.id===f1)>FREQ.findIndex(f=>f.id===f2))return;const t=getTension(f1,f2);if(t)typeLoad[t.type]+=val/gridData.max;});}
+  const dominantType=Object.entries(typeLoad).sort((a,b)=>b[1]-a[1])[0][0];
+  return{avg,present,absent,mirrors,typeLoad,dominantType};
+}
+
+function generateNarrative(sig,members){
+  if(!sig)return"";
+  const parts=[];
+  parts.push(`This team of ${members.length} carries ${sig.present.map(f=>f.name).join(", ")||"no dominant frequencies"} as its dominant frequencies.`);
+  if(sig.absent.length>0)parts.push(`${sig.absent.map(f=>f.name).join(", ")} ${sig.absent.length===1?"is":"are"} notably absent, which shapes what this team can and cannot do.`);
+  if(sig.mirrors.length>0)parts.push(`Mirror dynamics are present in ${sig.mirrors.map(m=>m.freq.name).join(", ")} — pay attention to how same-frequency pairs either amplify or stall each other.`);
+  parts.push(`The lived tension signature is ${T_NAMES[sig.dominantType]}-dominant — this team's culture is primarily defined by ${T_NAMES[sig.dominantType].toLowerCase()} dynamics.`);
+  return parts.join(" ");
+}
+
+function findCarriers(members,freqA,freqB){
+  if(freqA===freqB)return members.map(m=>({member:m,score:m.scores[freqA]||0,color:FREQ_BY_ID[freqA].color})).filter(c=>c.score>=60).sort((a,b)=>b.score-a.score).slice(0,6);
+  return members.map(m=>{const a=m.scores[freqA]||0,b=m.scores[freqB]||0;const freq=a>=b?freqA:freqB;return{member:m,score:Math.max(a,b),color:FREQ_BY_ID[freq].color};}).filter(c=>c.score>=60).sort((a,b)=>b.score-a.score).slice(0,5);
+}
+
+function getDominant(m){return FREQ.reduce((b,f)=>(m.scores[f.id]>(m.scores[b.id]||0))?f:b,FREQ[0]);}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function clamp(n){return Math.max(0,Math.min(100,n));}
+
+// ─── STATE ───────────────────────────────────────────────────────────────
+let team=JSON.parse(JSON.stringify(SAMPLE_TEAM));
+let view="matrix",mode="tensions",active=null,editing=null;
+let savedTeams=storage.list();
+let storageStatus="",storageTimer=null;
+let lastActiveKey=null;
+
+function setStatus(msg){
+  storageStatus=msg;
+  if(storageTimer)clearTimeout(storageTimer);
+  storageTimer=setTimeout(()=>{storageStatus="";renderShell();},1800);
+  renderShell();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────
+function render(){
+  const{grid,max}=computeTensionGrid(team.members);
+  const sig=computeSignature(team.members,{grid,max});
+  const narrative=generateNarrative(sig,team.members);
+  const activeTension=active?getTension(active.a,active.b):null;
+  const activeContent=activeTension?getTensionContent(activeTension,mode):null;
+  const activeWeight=active?(grid[`${active.a}-${active.b}`]||0)/(max||1):0;
+  const carriers=active?findCarriers(team.members,active.a,active.b):[];
+  const activeKey=active?`${active.a}-${active.b}-${mode}`:null;
+  const currentKey=`7f_team_${team.name.replace(/\s+/g,"_").toLowerCase()}`;
+
+  document.getElementById('app').innerHTML=`
+  <div style="background:${BG};min-height:100vh;color:${TEXT};font-family:Georgia,serif;padding:60px 24px 80px;">
+  <div style="max-width:1100px;margin:0 auto;">
+
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="${mono}color:${GOLD};margin-bottom:14px;">Diagnostic Instrument · The Seven Frequencies</div>
+      <h1 style="font-size:clamp(26px,4vw,42px);font-weight:300;letter-spacing:0.04em;margin:0;line-height:1.2;">Team <em style="color:${GOLD};font-style:italic;">Diagnostic</em></h1>
+      <p style="font-size:14px;font-style:italic;color:${TEXT_DIM};max-width:640px;margin:14px auto 0;line-height:1.6;">Map your team's frequency profile. See the tensions that shape its culture. Coach what is actually in the room.</p>
+    </div>
+
+    <!-- Team bar -->
+    <div style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:12px;flex:1 1 300px;">
+        <div style="${mono}color:${GOLD};font-size:8px;">Team</div>
+        <input id="team-name" value="${esc(team.name)}" style="background:transparent;border:none;color:${TEXT};font-family:Georgia,serif;font-size:17px;font-style:italic;outline:none;flex:1;min-width:120px;"/>
+        <div style="${mono}color:${TEXT_DIMMER};font-size:8px;">${team.members.length} ${team.members.length===1?"member":"members"}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button onclick="newTeam()" style="${mono}color:${TEXT_DIM};background:transparent;border:1px solid ${BORDER};border-radius:6px;padding:6px 12px;cursor:pointer;" onmouseover="this.style.color='${GOLD}';this.style.borderColor='${GOLD}60'" onmouseout="this.style.color='${TEXT_DIM}';this.style.borderColor='${BORDER}'">new</button>
+        <button onclick="saveTeam()" style="${mono}color:${TEXT_DIM};background:transparent;border:1px solid ${BORDER};border-radius:6px;padding:6px 12px;cursor:pointer;" onmouseover="this.style.color='${GOLD}';this.style.borderColor='${GOLD}60'" onmouseout="this.style.color='${TEXT_DIM}';this.style.borderColor='${BORDER}'">save team</button>
+        ${storageStatus?`<span style="${mono}color:${GOLD};font-size:8px;">${esc(storageStatus)}</span>`:''}
+      </div>
+    </div>
+
+    <!-- Saved teams -->
+    ${savedTeams.length>0?`
+    <div style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;padding:14px 20px;margin-bottom:24px;">
+      <div style="${mono}color:${GOLD};font-size:8px;margin-bottom:10px;">Saved Teams · click to load</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${savedTeams.map(k=>{
+          const label=k.replace("7f_team_","").replace(/_/g," ");
+          const isCur=k===currentKey;
+          return`<div style="display:flex;align-items:center;gap:0;background:${isCur?GOLD+'14':PANEL2};border:1px solid ${isCur?GOLD:BORDER};border-radius:999px;padding-left:12px;">
+            <button onclick="loadTeam('${esc(k)}')" style="background:transparent;border:none;color:${isCur?GOLD:TEXT_DIM};font-family:Georgia,serif;font-size:13px;font-style:italic;padding:6px 4px;cursor:pointer;">${esc(label)}</button>
+            <button onclick="deleteTeam('${esc(k)}')" style="background:transparent;border:none;color:${TEXT_DIMMER};font-size:14px;padding:4px 10px 4px 4px;cursor:pointer;" title="Delete">×</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`:`<div style="margin-bottom:24px;"></div>`}
+
+    <!-- Roster -->
+    <div style="margin-bottom:24px;">
+      <div style="${mono}color:${TEXT_DIM};margin-bottom:12px;">Roster</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        ${team.members.map(m=>{const dom=getDominant(m);const isEd=editing===m.id;return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${isEd?dom.color+'14':PANEL};border:1px solid ${isEd?dom.color:BORDER};border-radius:10px;">
+          <div style="width:9px;height:9px;border-radius:50%;background:${dom.color};box-shadow:0 0 8px ${dom.color}80;flex-shrink:0;"></div>
+          <div><div data-chip="${m.id}" style="font-size:13px;color:${TEXT};">${esc(m.name)}</div>${m.role?`<div style="${mono}font-size:7.5px;color:${TEXT_DIMMER};">${esc(m.role)}</div>`:''}</div>
+          <button onclick="startEdit('${m.id}')" style="${mono}font-size:8px;color:${TEXT_DIM};background:transparent;border:none;cursor:pointer;margin-left:4px;">edit</button>
+          <button onclick="removeMember('${m.id}')" style="color:${TEXT_DIMMER};background:transparent;border:none;cursor:pointer;font-size:14px;padding:0 2px;">×</button>
+        </div>`;}).join('')}
+        <button onclick="addMember()" style="${mono}color:${GOLD};background:transparent;border:1px dashed ${GOLD}40;border-radius:10px;padding:10px 16px;cursor:pointer;">+ add team member</button>
+      </div>
+    </div>
+
+    <!-- Editor slot -->
+    <div id="editor-slot"></div>
+
+    <!-- View + Mode toggles -->
+    ${team.members.length>=2?`
+      <div style="display:flex;gap:0;justify-content:center;margin-bottom:8px;">
+        <button onclick="setView('matrix')" style="${mono}color:${view==='matrix'?GOLD:TEXT_DIM};background:${view==='matrix'?GOLD+'10':'transparent'};border:1px solid ${view==='matrix'?GOLD+'50':BORDER};padding:10px 22px;cursor:pointer;">weighted matrix</button>
+        <button onclick="setView('network')" style="${mono}color:${view==='network'?GOLD:TEXT_DIM};background:${view==='network'?GOLD+'10':'transparent'};border:1px solid ${view==='network'?GOLD+'50':BORDER};padding:10px 22px;cursor:pointer;">network</button>
+      </div>
+      <div style="text-align:center;${mono}color:${TEXT_DIMMER};margin-bottom:16px;">${view==='matrix'?'— cell intensity shows how much this tension is actually live —':'— edges show the strongest tension between each pair —'}</div>
+    `:''}
+
+    <!-- Mirror alerts -->
+    ${sig&&sig.mirrors.length>0&&team.members.length>=2?`
+      <div style="max-width:720px;margin:0 auto 20px;padding:14px 20px;background:${GOLD}0a;border:1px solid ${GOLD}30;border-radius:10px;">
+        <div style="${mono}color:${GOLD};margin-bottom:8px;">◉ Mirror dynamics detected</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${sig.mirrors.map(m=>`<button onclick="setActive('${m.freq.id}','${m.freq.id}')" style="background:${m.freq.color}14;border:1px solid ${m.freq.color}60;border-radius:999px;padding:5px 12px;color:${TEXT};font-family:Georgia,serif;font-size:12px;font-style:italic;cursor:pointer;"><span style="color:${m.freq.color};">●</span> ${m.freq.name} × ${m.freq.name} <span style="color:${TEXT_DIMMER};font-size:10px;">(${m.carriers.length})</span></button>`).join('')}
+        </div>
+      </div>
+    `:''}
+
+    ${team.members.length<2?`<div style="text-align:center;padding:40px 20px;color:${TEXT_DIM};font-style:italic;">Add at least two members to see tension dynamics.</div>`:''}
+
+    ${team.members.length>=2&&view==='matrix'?renderMatrix(grid,max):''}
+    ${team.members.length>=2&&view==='network'?renderNetwork(team.members):''}
+
+    <!-- Mode toggle -->
+    ${team.members.length>=2?`
+      <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-top:24px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="${mono}color:${TEXT_DIMMER};">Read as</div>
+        <div style="display:flex;border:1px solid ${BORDER};border-radius:999px;overflow:hidden;">
+          <button onclick="setMode('tensions')" style="${mono}color:${mode==='tensions'?BG:TEXT_DIM};background:${mode==='tensions'?GOLD:'transparent'};border:none;padding:7px 16px;cursor:pointer;">tensions</button>
+          <button onclick="setMode('dynamics')" style="${mono}color:${mode==='dynamics'?BG:TEXT_DIM};background:${mode==='dynamics'?GOLD:'transparent'};border:none;padding:7px 16px;cursor:pointer;">dynamics</button>
+        </div>
+        <div style="font-size:11px;font-style:italic;color:${TEXT_DIMMER};max-width:300px;">${mode==='tensions'?"What's between two frequencies.":"How a team lives it."}</div>
+      </div>
+    `:''}
+
+    <!-- Detail panel -->
+    <div id="detail-slot"></div>
+
+    <!-- Signature -->
+    ${sig&&team.members.length>=2?renderSignature(sig,narrative):''}
+
+    <!-- Legend -->
+    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:32px;padding-top:20px;border-top:1px solid ${BORDER};">
+      ${Object.entries(T_NAMES).map(([k,v])=>`<div style="display:flex;align-items:center;gap:6px;${mono}font-size:9px;color:${TEXT_DIM};"><span style="color:${T_COLORS[k]};">${T_ICONS[k]}</span> ${v}</div>`).join('')}
+    </div>
+
+    <div style="text-align:center;margin-top:48px;font-size:11px;font-style:italic;color:${TEXT_DIMMER};">
+      Built on <em>The Seven Frequencies of Communication</em> by Erwin Raphael McManus · Team Dynamics Coaching Matrix + Dynamic Tension Matrix
+    </div>
+  </div></div>`;
+
+  // Bind team name
+  document.getElementById('team-name').addEventListener('input',e=>{team.name=e.target.value;});
+
+  // Detail panel
+  if(active&&activeTension&&activeContent){
+    if(activeKey!==lastActiveKey){
+      lastActiveKey=activeKey;
+      document.getElementById('detail-slot').innerHTML=renderDetail(active,activeTension,activeContent,activeWeight,carriers);
+    }
+  } else {
+    lastActiveKey=null;
+    document.getElementById('detail-slot').innerHTML='';
+  }
+
+  buildEditor();
+}
+
+// Lightweight shell re-render for storage status only
+function renderShell(){render();}
+
+function renderMatrix(grid,max){
+  let h=`<div style="overflow-x:auto;margin-bottom:24px;"><table style="border-collapse:separate;border-spacing:3px;min-width:480px;margin:0 auto;">
+  <thead><tr><th style="width:80px;"></th>${FREQ.map(f=>`<th style="width:60px;padding-bottom:8px;text-align:center;">
+    <div style="width:9px;height:9px;border-radius:50%;background:${f.color};margin:0 auto 5px;box-shadow:0 0 8px ${f.color}60;"></div>
+    <div style="${mono}font-size:8px;color:${f.color};">${f.id.toUpperCase()}</div>
+  </th>`).join('')}</tr></thead><tbody>`;
+  FREQ.forEach(rowF=>{
+    h+=`<tr><td style="padding-right:10px;text-align:right;"><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
+      <div style="${mono}font-size:8px;color:${rowF.color};">${rowF.id.toUpperCase()}</div>
+      <div style="width:9px;height:9px;border-radius:50%;background:${rowF.color};box-shadow:0 0 8px ${rowF.color}60;"></div>
+    </div></td>`;
+    FREQ.forEach(colF=>{
+      const t=getTension(rowF.id,colF.id);
+      if(!t){h+=`<td><div style="width:54px;height:54px;"></div></td>`;return;}
+      const cw=max>0?(grid[`${rowF.id}-${colF.id}`]||0)/max:0;
+      const tc=T_COLORS[t.type];
+      const isAct=active&&active.a===rowF.id&&active.b===colF.id;
+      const isMir=rowF.id===colF.id;
+      const ih=Math.round((0.15+cw*0.5)*255).toString(16).padStart(2,'0');
+      const bh=isAct?'cc':Math.round((0.1+cw*0.55)*255).toString(16).padStart(2,'0');
+      h+=`<td><div id="mc-${rowF.id}-${colF.id}" onclick="setActive('${rowF.id}','${colF.id}')"
+        title="${rowF.name} × ${colF.name}" style="width:54px;height:54px;border-radius:8px;cursor:pointer;
+        background:${isMir?`${rowF.color}${ih}`:`linear-gradient(135deg,${rowF.color}${ih},${colF.color}${ih})`};
+        border:1px solid ${tc}${bh};display:flex;align-items:center;justify-content:center;
+        font-size:17px;transition:all 0.15s;transform:${isAct?'scale(1.12)':'scale(1)'};
+        box-shadow:${isAct?`0 0 22px ${tc}66`:cw>0.5?`0 0 12px ${tc}30`:'none'};opacity:${0.35+cw*0.65};">
+        <span style="color:${tc};">${T_ICONS[t.type]}</span>
+      </div></td>`;
+    });
+    h+=`</tr>`;
+  });
+  return h+`</tbody></table></div>`;
+}
+
+function renderNetwork(members){
+  const sz=520,cx=260,cy=260,r=Math.min(195,sz*0.37);
+  const pos=members.map((m,i)=>{const a=(i/members.length)*Math.PI*2-Math.PI/2;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};});
+  const edges=[];
+  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){
+    let best={weight:0,a:null,b:null,type:null};
+    for(let x=0;x<FREQ.length;x++)for(let y=x;y<FREQ.length;y++){
+      const f1=FREQ[x].id,f2=FREQ[y].id,A=members[i].scores,B=members[j].scores;
+      const w=f1===f2?(A[f1]*B[f1])/100:(A[f1]*B[f2]+A[f2]*B[f1])/100;
+      if(w>best.weight){const t=getTension(f1,f2);if(t)best={weight:w,a:f1,b:f2,type:t.type};}
+    }
+    if(best.weight>0)edges.push({from:i,to:j,...best});
+  }
+  const mx=Math.max(...edges.map(e=>e.weight),1);
+  let svg=`<div style="display:flex;justify-content:center;margin-bottom:24px;"><svg width="${sz}" height="${sz}" style="max-width:100%;">`;
+  edges.forEach(e=>{
+    const p1=pos[e.from],p2=pos[e.to],norm=e.weight/mx,color=T_COLORS[e.type];
+    const isAct=active&&((active.a===e.a&&active.b===e.b)||(active.a===e.b&&active.b===e.a));
+    svg+=`<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${color}" stroke-width="${1+norm*3.5}" stroke-opacity="${isAct?0.95:0.3+norm*0.45}" style="cursor:pointer;" onclick="setActive('${e.a}','${e.b}')"/>`;
+  });
+  members.forEach((m,i)=>{
+    const p=pos[i],dom=getDominant(m),sec=FREQ.filter(f=>f.id!==dom.id).reduce((b,f)=>(m.scores[f.id]>(m.scores[b.id]||0))?f:b,FREQ[0]);
+    const init=m.name.split(' ').map(n=>n[0]).join('').slice(0,2);
+    svg+=`<g><circle cx="${p.x}" cy="${p.y}" r="26" fill="${BG}" stroke="${sec.color}" stroke-width="1.5" stroke-opacity="0.4"/>
+      <circle cx="${p.x}" cy="${p.y}" r="20" fill="${dom.color}" fill-opacity="0.25" stroke="${dom.color}" stroke-width="2"/>
+      <text x="${p.x}" y="${p.y+4}" text-anchor="middle" style="fill:${TEXT};font-size:10px;font-family:Georgia,serif;font-style:italic;pointer-events:none;">${init}</text>
+      <text x="${p.x}" y="${p.y+44}" text-anchor="middle" style="fill:${TEXT_DIM};font-size:9px;font-family:Georgia,serif;pointer-events:none;">${esc(m.name)}</text>
+    </g>`;
+  });
+  return svg+`</svg></div>`;
+}
+
+function renderDetail(act,tension,content,weight,carriers){
+  const a=FREQ_BY_ID[act.a],b=FREQ_BY_ID[act.b],tc=T_COLORS[tension.type];
+  const isMirror=act.a===act.b;
+  const toolLabel=mode==="dynamics"?"Dynamics":"Tensions";
+  const toolDesc=mode==="dynamics"?"How a team lives it":"What's between two frequencies";
+  const isRef=mode==="tensions";
+  return `<div style="max-width:720px;margin:24px auto 0;background:${PANEL};border:1px solid ${tc}30;border-radius:14px;padding:32px 30px 28px;position:relative;box-shadow:0 28px 72px rgba(0,0,0,0.7),0 0 40px ${tc}10;">
+    <button onclick="closeDetail()" style="position:absolute;top:14px;right:16px;background:transparent;border:none;color:${TEXT_DIM};font-size:20px;cursor:pointer;">×</button>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div><div style="${mono}font-size:9px;color:${GOLD};">· ${toolLabel} ·</div><div style="font-size:11px;font-style:italic;color:${TEXT_DIMMER};margin-top:2px;">${toolDesc}</div></div>
+    </div>
+    <div style="display:flex;align-items:center;margin-bottom:18px;">
+      <div style="flex:1;text-align:center;">
+        <div style="width:14px;height:14px;border-radius:50%;background:${a.color};margin:0 auto 5px;box-shadow:0 0 12px ${a.color}80;"></div>
+        <div style="${mono}font-size:9px;color:${a.color};">${a.name}</div>
+        <div style="font-size:11px;font-style:italic;color:rgba(237,233,223,0.35);margin-top:2px;">${a.transmits}</div>
+      </div>
+      <div style="padding:0 14px;text-align:center;">
+        <div style="height:1px;width:32px;background:linear-gradient(90deg,transparent,${tc},transparent);margin:0 auto 3px;"></div>
+        <div style="${mono}font-size:8px;color:${tc};">${T_ICONS[tension.type]}</div>
+        <div style="height:1px;width:32px;background:linear-gradient(90deg,transparent,${tc},transparent);margin:3px auto 0;"></div>
+      </div>
+      <div style="flex:1;text-align:center;">
+        <div style="width:14px;height:14px;border-radius:50%;background:${b.color};margin:0 auto 5px;box-shadow:0 0 12px ${b.color}80;"></div>
+        <div style="${mono}font-size:9px;color:${b.color};">${b.name}</div>
+        <div style="font-size:11px;font-style:italic;color:rgba(237,233,223,0.35);margin-top:2px;">${b.transmits}</div>
+      </div>
+    </div>
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;border:1px solid ${tc}60;color:${tc};${mono}font-size:8px;margin-bottom:14px;">
+      ${T_ICONS[tension.type]} ${T_NAMES[tension.type]} Tension ${isMirror?"· Mirror Pairing":""}
+    </div>
+    <div style="font-size:22px;font-weight:400;letter-spacing:0.04em;margin-bottom:4px;">${content.title}</div>
+    <div style="font-size:13px;font-style:italic;color:${tc};margin-bottom:14px;">${content.subtitle}</div>
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="${mono}color:${TEXT_DIMMER};">Lived intensity</div>
+        <div style="${mono}color:${tc};">${Math.round(weight*100)}%</div>
+      </div>
+      <div style="height:3px;background:${tc}15;border-radius:2px;overflow:hidden;"><div style="height:100%;width:${weight*100}%;background:${tc};box-shadow:0 0 8px ${tc};"></div></div>
+    </div>
+    ${carriers.length>0?`<div style="margin-bottom:20px;">
+      <div style="${mono}color:${GOLD};margin-bottom:8px;">${isMirror?"Who carries this frequency":"Who carries this tension"}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${carriers.map(c=>`<div style="font-size:12px;font-style:italic;color:${TEXT_DIM};padding:4px 10px;background:${PANEL2};border:1px solid ${c.color}40;border-radius:14px;"><span style="color:${c.color};">●</span> ${esc(c.member.name)} <span style="color:${TEXT_DIMMER};font-size:10px;">(${c.score})</span></div>`).join('')}</div>
+    </div>`:''}
+    ${isRef?`
+      <p style="font-size:15px;line-height:1.8;color:rgba(237,233,223,0.78);margin-bottom:20px;">${content.body}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;border-top:1px solid ${BORDER};padding-top:16px;margin-bottom:16px;">
+        <div><div style="${mono}color:#e8533a;margin-bottom:6px;">Friction</div><p style="font-size:13px;line-height:1.65;color:rgba(237,233,223,0.5);font-style:italic;margin:0;">${content.friction}</p></div>
+        <div><div style="${mono}color:#4db882;margin-bottom:6px;">Synthesis</div><p style="font-size:13px;line-height:1.65;color:rgba(237,233,223,0.5);font-style:italic;margin:0;">${content.synthesis}</p></div>
+      </div>
+      <div style="background:${PANEL2};border-left:3px solid ${GOLD};border-radius:0 8px 8px 0;padding:14px 18px;">
+        <div style="${mono}color:${GOLD};margin-bottom:6px;">Watch For</div>
+        <p style="font-size:13px;line-height:1.7;color:rgba(237,233,223,0.6);font-style:italic;margin:0;">${content.watch}</p>
+      </div>
+    `:`
+      <div style="${mono}color:${GOLD};margin-bottom:6px;">Team Dynamic</div>
+      <p style="font-size:14px;line-height:1.75;color:rgba(237,233,223,0.78);margin-bottom:18px;">${content.dynamic}</p>
+      <div style="background:${PANEL2};border-radius:10px;padding:14px 18px;margin-bottom:14px;">
+        <div style="${mono}color:${tc};margin-bottom:6px;">Coaching Approach</div>
+        <p style="font-size:13px;line-height:1.7;color:rgba(237,233,223,0.7);font-style:italic;margin:0;">${content.coaching}</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+        <div style="background:rgba(232,83,58,0.07);border-radius:8px;padding:12px;">
+          <div style="${mono}color:#e8533a;margin-bottom:4px;">Team Risk</div>
+          <p style="font-size:12.5px;line-height:1.6;color:rgba(237,233,223,0.6);font-style:italic;margin:0;">${content.teamrisk}</p>
+        </div>
+        <div style="background:rgba(77,184,130,0.07);border-radius:8px;padding:12px;">
+          <div style="${mono}color:#4db882;margin-bottom:4px;">Team Gain</div>
+          <p style="font-size:12.5px;line-height:1.6;color:rgba(237,233,223,0.6);font-style:italic;margin:0;">${content.teamgain}</p>
+        </div>
+      </div>
+      <div style="background:${PANEL2};border-left:3px solid ${GOLD};border-radius:0 8px 8px 0;padding:14px 18px;">
+        <div style="${mono}color:${GOLD};margin-bottom:6px;">Coach's Questions</div>
+        <p style="font-size:13px;line-height:1.7;color:rgba(237,233,223,0.6);font-style:italic;margin:0;">${content.coachtip}</p>
+      </div>
+    `}
+  </div>`;
+}
+
+function renderSignature(sig,narrative){
+  const sorted=Object.entries(sig.typeLoad).sort((a,b)=>b[1]-a[1]);
+  const total=sorted.reduce((s,[_,v])=>s+v,0)||1;
+  return `<div style="max-width:720px;margin:28px auto 0;background:${PANEL};border:1px solid ${GOLD}28;border-radius:14px;padding:28px 28px 24px;">
+    <div style="${mono}color:${GOLD};margin-bottom:4px;">Team Signature</div>
+    <div style="font-size:22px;font-weight:300;letter-spacing:0.03em;margin-bottom:14px;">The <em style="color:${GOLD};font-style:italic;">lived reality</em> of this team</div>
+    <p style="font-size:14px;line-height:1.75;color:rgba(237,233,223,0.72);font-style:italic;margin-bottom:22px;">${narrative}</p>
+    <div style="margin-bottom:22px;">
+      <div style="${mono}color:${TEXT_DIMMER};margin-bottom:10px;">Average frequency profile</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${FREQ.map(f=>{const v=sig.avg[f.id]||0;return`<div style="display:flex;align-items:center;gap:10px;"><div style="width:72px;${mono}font-size:9px;color:${f.color};text-align:right;">${f.name}</div><div style="flex:1;height:6px;background:${f.color}10;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${v}%;background:${f.color};box-shadow:${v>=50?`0 0 6px ${f.color}`:'none'};"></div></div><div style="width:30px;${mono}font-size:9px;color:${f.color};text-align:right;">${Math.round(v)}</div></div>`;}).join('')}
+      </div>
+    </div>
+    <div>
+      <div style="${mono}color:${TEXT_DIMMER};margin-bottom:10px;">Tension type distribution</div>
+      <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:10px;">
+        ${sorted.map(([type,val])=>val>0?`<div style="flex:${val};background:${T_COLORS[type]};"></div>`:'').join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        ${sorted.map(([type,val])=>`<div style="display:flex;align-items:center;gap:6px;${mono}font-size:9px;color:${TEXT_DIM};"><div style="width:8px;height:8px;border-radius:2px;background:${T_COLORS[type]};"></div>${T_NAMES[type]} <span style="color:${T_COLORS[type]};">${Math.round(val/total*100)}%</span></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── EDITOR (number inputs, no re-render on keystrokes) ─────────────────
+function buildEditor(){
+  const slot=document.getElementById('editor-slot');
+  if(!slot)return;
+  if(editing&&team.members.find(m=>m.id===editing)){
+    const m=team.members.find(m=>m.id===editing);
+    if(slot.dataset.editingId!==editing){
+      slot.dataset.editingId=editing;
+      slot.innerHTML=`<div style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;padding:24px 24px 20px;margin-bottom:28px;position:relative;">
+        <button onclick="closeEdit()" style="position:absolute;top:14px;right:16px;background:transparent;border:none;color:${TEXT_DIM};font-size:20px;cursor:pointer;">×</button>
+        <div style="${mono}color:${GOLD};margin-bottom:12px;">Editing Member</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+          <div style="flex:1 1 240px;"><div style="${mono}color:${TEXT_DIMMER};margin-bottom:4px;">Name</div>
+            <input id="ed-name" value="${esc(m.name)}" style="width:100%;background:${PANEL2};border:1px solid ${BORDER};border-radius:6px;padding:8px 12px;color:${TEXT};font-family:Georgia,serif;font-size:15px;outline:none;"/></div>
+          <div style="flex:1 1 240px;"><div style="${mono}color:${TEXT_DIMMER};margin-bottom:4px;">Role</div>
+            <input id="ed-role" value="${esc(m.role||'')}" placeholder="e.g. COO, Engineering Lead" style="width:100%;background:${PANEL2};border:1px solid ${BORDER};border-radius:6px;padding:8px 12px;color:${TEXT};font-family:Georgia,serif;font-size:15px;font-style:italic;outline:none;"/></div>
+        </div>
+        <div style="${mono}color:${TEXT_DIMMER};margin-bottom:10px;">Frequency Scores (0–100)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+          ${FREQ.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:${PANEL2};border:1px solid ${BORDER};border-radius:8px;padding:10px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;">
+              <div style="width:8px;height:8px;border-radius:50%;background:${f.color};flex-shrink:0;box-shadow:0 0 6px ${f.color}80;"></div>
+              <div style="font-family:Georgia,serif;font-size:13px;color:${TEXT};">${f.name}</div>
+            </div>
+            <input type="number" min="0" max="100" step="1" id="ed-${f.id}" value="${m.scores[f.id]||0}" style="width:52px;background:${BG};border:1px solid ${f.color}60;border-radius:4px;padding:4px 6px;color:${f.color};font-family:'DM Mono',monospace;font-size:12px;text-align:center;outline:none;"/>
+          </div>`).join('')}
+        </div>
+      </div>`;
+
+      document.getElementById('ed-name').addEventListener('input',e=>{
+        m.name=e.target.value;
+        document.querySelectorAll(`[data-chip="${m.id}"]`).forEach(el=>el.textContent=e.target.value);
+      });
+      document.getElementById('ed-role').addEventListener('input',e=>{m.role=e.target.value;});
+      FREQ.forEach(f=>{
+        const inp=document.getElementById(`ed-${f.id}`);
+        if(inp){
+          inp.addEventListener('focus',e=>e.target.select());
+          inp.addEventListener('input',e=>{
+            const raw=e.target.value;
+            if(raw==="")return;
+            const n=parseInt(raw,10);
+            if(!isNaN(n))m.scores[f.id]=clamp(n);
+          });
+          inp.addEventListener('change',e=>{
+            const n=parseInt(e.target.value,10);
+            if(isNaN(n))e.target.value=m.scores[f.id]||0;
+            else{m.scores[f.id]=clamp(n);e.target.value=m.scores[f.id];}
+          });
+        }
+      });
+    }
+  } else {
+    slot.dataset.editingId='';
+    slot.innerHTML='';
+  }
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────
+function setView(v){view=v;active=null;lastActiveKey=null;render();}
+function setMode(m){mode=m;lastActiveKey=null;render();}
+function setActive(a,b){active={a,b};render();}
+function closeDetail(){active=null;lastActiveKey=null;render();}
+function startEdit(id){editing=id;render();}
+function closeEdit(){editing=null;render();}
+function newTeam(){team={name:"New Team",members:[]};editing=null;active=null;lastActiveKey=null;render();}
+function addMember(){const id=`p${Date.now()}`;team.members.push({id,name:"New member",role:"",scores:{mot:50,hea:50,cha:50,com:50,pro:50,see:50,mav:50}});editing=id;render();}
+function removeMember(id){team.members=team.members.filter(m=>m.id!==id);if(editing===id)editing=null;active=null;lastActiveKey=null;render();}
+
+function saveTeam(){
+  const key=storage.save(team);
+  if(key){savedTeams=storage.list();setStatus("saved");}
+  else setStatus("save failed");
+}
+function loadTeam(key){
+  const t=storage.load(key);
+  if(t){team=t;editing=null;active=null;lastActiveKey=null;savedTeams=storage.list();setStatus("loaded");}
+  else setStatus("load failed");
+}
+function deleteTeam(key){
+  const label=key.replace("7f_team_","").replace(/_/g," ");
+  if(confirm(`Delete saved team "${label}"?`)){
+    storage.delete(key);savedTeams=storage.list();setStatus("deleted");
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  render();
+  // Auto-resize iframe in parent page
+  function reportHeight() {
+    const h = document.body.scrollHeight;
+    window.parent.postMessage({ type: 'resize', height: h }, '*');
+  }
+  // Report on every render and on any DOM size change
+  const ro = new ResizeObserver(reportHeight);
+  ro.observe(document.body);
+  reportHeight();
+});
+</script>
+</body>
+</html>
